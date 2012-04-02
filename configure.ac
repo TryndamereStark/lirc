@@ -388,7 +388,7 @@ AC_CHECK_HEADERS(linux/input.h,[
 dnl check if hiddev is available
 AC_CHECK_HEADERS([linux/types.h])
 AC_CHECK_HEADERS([linux/hiddev.h],[
-  possible_drivers="${possible_drivers} (asusdh) (bw6130) (dvico) (macmini)"
+  possible_drivers="${possible_drivers} (asusdh) (bw6130) (dvico) (macmini) (zotac)"
   AC_MSG_CHECKING(for HIDDEV_FLAG_UREF support)
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <linux/types.h>
@@ -398,7 +398,7 @@ AC_CHECK_HEADERS([linux/hiddev.h],[
     ]])],[
     AC_MSG_RESULT(yes)
     AC_DEFINE(HAVE_LINUX_HIDDEV_FLAG_UREF)
-    possible_drivers="${possible_drivers} (samsung) (sb0540)"
+    possible_drivers="${possible_drivers} (samsung) (sb0540) (zotac)"
     ],[
     AC_MSG_RESULT(no)
     ])
@@ -458,7 +458,7 @@ AC_ARG_WITH(driver,
                           srm7500libusb, tekram,
                           tekram_bt829, tira, tira_raw, ttusbir,
                           tuxbox, tvbox, udp, uirt2, uirt2_raw,
-                          usb_uirt_raw, usbx, wpc8769l],
+                          usb_uirt_raw, usbx, wpc8769l, zotac],
 driver=${withval},
 driver="unset"
 )
@@ -476,6 +476,7 @@ portaudio_lib=""
 alsa_lib=""
 atilibusb_lib=""
 atwf83_lib=""
+zotac_lib=""
 awlibusb_lib=""
 dfclibusb_lib=""
 srm7500libusb_lib=""
@@ -694,6 +695,10 @@ if test "$driver" = "userspace" -o "$driver" = "all"; then
                 ;;
         usbx)
                 hw_module="${hw_module} hw_usbx.o serial.o"
+                ;;
+        zotac)
+                hw_module="${hw_module} hw_zotac.o"
+                zotac_lib=-lpthread
                 ;;
   esac
   done
@@ -1306,6 +1311,14 @@ if test "$driver" = "sb0540"; then
   lircd_conf="creative/lircd.conf.alsa_usb"
 fi
 
+if test "$driver" = "zotac"; then
+  lirc_driver="$driver"
+  hw_module="hw_zotac.o"
+  HW_DEFAULT="hw_zotac"
+  lircd_conf="zotac/lircd.conf.zotac"
+  zotac_lib=-lpthread
+fi
+
 if test "$driver" = "serial"; then
   lirc_driver="lirc_dev lirc_serial"
 fi
@@ -1511,6 +1524,7 @@ if test "$lirc_driver" = "none" || \
         test "$lirc_driver" = "macmini" || \
         test "$lirc_driver" = "samsung" || \
         test "$lirc_driver" = "sb0540" || \
+        test "$lirc_driver" = "zotac" || \
         test "$lirc_driver" = "srm7500libusb" || \
         test "$lirc_driver" = "userspace"; then
   lirc_driver=
@@ -1683,7 +1697,7 @@ if ! echo ${hw_module}|grep " receive.o" >/dev/null; then
         receive="receive.o"
 fi
 
-hw_module_libs="${alsa_lib} ${atilibusb_lib} ${awlibusb_lib} ${caraca_lib} ${commandir_lib} ${dfclibusb_lib} ${ftdi_lib} ${iguanaIR_lib} ${irman_lib} ${portaudio_lib} ${srm7500libusb_lib} ${atwf83_lib}"
+hw_module_libs="${alsa_lib} ${atilibusb_lib} ${awlibusb_lib} ${caraca_lib} ${commandir_lib} ${dfclibusb_lib} ${ftdi_lib} ${iguanaIR_lib} ${irman_lib} ${portaudio_lib} ${srm7500libusb_lib} ${atwf83_lib} ${zotac_lib}"
 
 dnl tell the Makefiles what we decided
 AC_SUBST(daemon)
